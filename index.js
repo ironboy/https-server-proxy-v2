@@ -11,8 +11,8 @@ monkeyPatchDeciever();
 const httpProxy = require('http-proxy');
 const spdy = require('spdy');
 
-// certificateName, routes
-export default function createHttpsServerProxy(...args) {
+// args -> certificateName, routes
+module.exports = function createHttpsServerProxy(...args) {
 
   let routes = {}, currentCertName, certNameByDomain = {};
   // map certs to domains

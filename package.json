@@ -1,6 +1,6 @@
 {
   "name": "https-server-proxy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An https server proxy for node.js (supporting http2 and Express applications)",
   "main": "index.js",
   "repository": {
@@ -12,13 +12,12 @@
   "keywords": [
     "node",
     "Node.js",
-    "es modules",
-    "es6 modules",
-    "ES modules",
-    "ES6 modules",
-    "require",
-    "__dirname",
-    "__filename"
+    "server",
+    "proxy",
+    "http2",
+    "express",
+    "reverse-proxy",
+    "https"
   ],
   "bugs": {
     "url": "https://github.com/ironboy//https-server-proxy/issues"
