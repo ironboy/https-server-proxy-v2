@@ -11,10 +11,18 @@ monkeyPatchDeciever();
 const httpProxy = require('http-proxy');
 const spdy = require('spdy');
 
+let settings = {
+  httpPort: 80,
+  httpsPort: 443,
+  pathToCerts: '/etc/letsencrypt/live',
+  xPoweredBy: 'Love'
+};
+
 // args -> certificateName, routes
-module.exports = function createHttpsServerProxy(...args) {
+function createHttpsServerProxy(...args) {
 
   let routes = {}, currentCertName, certNameByDomain = {};
+
   // map certs to domains
   for (let arg of args) {
     if (typeof arg === 'string') { currentCertName = arg; }
@@ -55,7 +63,7 @@ module.exports = function createHttpsServerProxy(...args) {
       key: certs[defaultCertName].key,
       cert: certs[defaultCertName].cert,
       spdy: { maxChunk: 8192, maxStreams: 80 }
-    }, serveHttps).listen(443);
+    }, serveHttps).listen(settings.httpsPort);
 
     // Without this spdy cuts off some streams.
     // (The whole repsonse is not delivered without this!!!)
@@ -70,7 +78,7 @@ module.exports = function createHttpsServerProxy(...args) {
       proxy.ws(req, socket, head, { target: `ws://${host}:${port}` }, e => { });
     });
 
-    http.createServer(serveHttp).listen(80);
+    http.createServer(serveHttp).listen(settings.httpPort);
   }
 
   function serveHttp(req, res) {
@@ -124,7 +132,7 @@ module.exports = function createHttpsServerProxy(...args) {
     // and then replace it with our function
     res.writeHead = function (statusCode, headers) {
       // set/replace our own headers
-      res.setHeader('x-powered-by', 'Love');
+      res.setHeader('x-powered-by', settings.xPoweredBy);
       // call the original write head function
       return res.oldWriteHead(statusCode, headers);
     }
@@ -142,7 +150,8 @@ module.exports = function createHttpsServerProxy(...args) {
   }
 
   // read https / tls (transport layer security) certs
-  function readCerts(pathToCerts = '/etc/letsencrypt/live') {
+  function readCerts() {
+    let pathToCerts = settings.pathToCerts;
     let certs = {};
     let domains = fs.readdirSync(pathToCerts);
     pathToCerts.slice(-1) === '/' || (pathToCerts += '/');
@@ -202,3 +211,9 @@ function monkeyPatchDeciever() {
     return orgBinding.apply(process, args);
   }
 }
+
+createHttpsServerProxy.settings = s => {
+  settings = { ...settings, ...s };
+}
+
+module.exports = createHttpsServerProxy;
