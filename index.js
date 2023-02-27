@@ -173,6 +173,7 @@ function createHttpsServerProxy(...args) {
   function lookupCert(domain, callback) {
     let certName = certNameByDomain[domain];
     let theCert = certs[certName];
+    if (!theCert) { return; }
     callback(null, theCert.secureContext);
   }
 
