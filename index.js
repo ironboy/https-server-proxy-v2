@@ -3,6 +3,7 @@ const http = require('http');
 const tls = require('tls');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 // Monkey patching needed before spdy require
 monkeyPatchDeciever();
@@ -58,6 +59,11 @@ function pruneBrotliCache() {
   }
 }
 
+function oneWayKey(key) {
+  return crypto.createHmac('sha256', 'abc').update(key).digest('hex');
+}
+
+
 // args -> certificateName, routes
 function createHttpsServerProxy(...args) {
 
@@ -98,16 +104,16 @@ function createHttpsServerProxy(...args) {
       let ct = h['Content-Type'] || h['content-type'];
       let en = h['Content-Encoding'] || h['content-encoding'];
       if (req.method === 'GET' && !en && ae.includes('br') && ct && settings.brotliCompress(ct)) {
-        let responseAsText = response.toString();
-        if (brotliCache[responseAsText]) {
+        let cacheKey = oneWayKey(response.toString());
+        if (brotliCache[cacheKey]) {
           // in cache
-          response = brotliCache[responseAsText].response;
-          brotliCache[responseAsText].lastServed = Date.now();
+          response = brotliCache[cacheKey].response;
+          brotliCache[cacheKey].lastServed = Date.now();
         }
         else {
           response = brotli.compress(response, { quality: settings.brotliQuality });
-          brotliCache[responseAsText] = { lastServed: Date.now(), response };
-          brotliCacheSizeMb += (responseAsText.length + response.length) / 1024 / 1024;
+          brotliCache[cacheKey] = { lastServed: Date.now(), response };
+          brotliCacheSizeMb += (cacheKey.length + response.length) / 1024 / 1024;
           if (brotliCacheSizeMb > settings.brotliCacheMaxSizeMb) { pruneBrotliCache(); }
         }
         h['Content-Length'] && (h['Content-Length'] = response.length);
