@@ -41,7 +41,10 @@ proxy.settings({
   httpPort: 80,
   httpsPort: 443,
   pathToCerts: '/etc/letsencrypt/live',
-  xPoweredBy: 'Love'
+  xPoweredBy: 'Love',
+  // http2 specific
+  maxChunk: 8192,
+  maxStreams: 80
 });
 
 proxy(/* see previous example */);

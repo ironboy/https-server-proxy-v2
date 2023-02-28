@@ -15,7 +15,9 @@ let settings = {
   httpPort: 80,
   httpsPort: 443,
   pathToCerts: '/etc/letsencrypt/live',
-  xPoweredBy: 'Love'
+  xPoweredBy: 'Love',
+  maxChunk: 8192,
+  maxStreams: 80
 };
 
 // args -> certificateName, routes
@@ -81,7 +83,7 @@ function createHttpsServerProxy(...args) {
       SNICallback: lookupCert,
       key: certs[defaultCertName].key,
       cert: certs[defaultCertName].cert,
-      spdy: { maxChunk: 8192, maxStreams: 80 }
+      spdy: { maxChunk: settings.maxChunk, maxStreams: settings.maxStreams }
     }, serveHttps).listen(settings.httpsPort);
 
     // Without this spdy cuts off some streams.
