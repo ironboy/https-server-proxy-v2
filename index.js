@@ -39,7 +39,27 @@ function createHttpsServerProxy(...args) {
   const certs = readCerts();
 
   // Create a new reverse proxy
-  const proxy = httpProxy.createProxyServer();
+  const proxy = httpProxy.createProxyServer({ selfHandleResponse: true });
+
+  // Necessary with Node >= 15 to get spdy to work
+  // (does not seem to work with default chunking from the proxy,
+  //  but works if we send the whole response at once...)
+  // - this is a BIG workaround don't know 
+  //   how it will play with large files(videos etc)
+  proxy.on('proxyRes', function (proxyRes, req, res) {
+    var body = [];
+    proxyRes.on('data', function (chunk) {
+      body.push(chunk);
+    });
+    proxyRes.on('end', function () {
+      for (let [header, value] of Object.entries(proxyRes.headers)) {
+        res.setHeader(header, value);
+      }
+      console.log(req.url, proxyRes.statusCode);
+      res.statusCode = proxyRes.statusCode;
+      res.end(Buffer.concat(body));
+    });
+  });
 
   // Handle proxy errors - thus not breaking the whole
   // reverse-proxy app if an app doesn't answer
