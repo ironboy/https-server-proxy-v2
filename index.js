@@ -55,7 +55,6 @@ function createHttpsServerProxy(...args) {
       for (let [header, value] of Object.entries(proxyRes.headers)) {
         res.setHeader(header, value);
       }
-      console.log(req.url, proxyRes.statusCode);
       res.statusCode = proxyRes.statusCode;
       res.end(Buffer.concat(body));
     });
