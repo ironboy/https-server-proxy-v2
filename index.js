@@ -10,15 +10,53 @@ monkeyPatchDeciever();
 // Non native dependencies
 const httpProxy = require('http-proxy');
 const spdy = require('spdy');
+const brotli = require('brotli');
 
 let settings = {
   httpPort: 80,
   httpsPort: 443,
   pathToCerts: '/etc/letsencrypt/live',
   xPoweredBy: 'Love',
-  maxChunk: 8192,
-  maxStreams: 80
+  brotliCompress: ct => /* compresss if true, ct = content-type */
+    ct.includes('text') ||
+    ct.includes('javascript') ||
+    ct.includes('json') ||
+    ct.includes('svg'),
+  brotliQuality: 11, /* 1-11 */
+  brotliCacheMaxSizeMb: 50,
+  http2MaxChunk: 8192,
+  http2MaxStreams: 80
 };
+
+// cacheMemory for brotli compression
+const brotliCache = {};
+let brotliCacheSizeMb = 0;
+
+// prune brotli cache if too big
+function pruneBrotliCache() {
+  function getCacheSize() {
+    brotliCacheSizeMb = 0;
+    for (let [key, val] of Object.entries(brotliCache)) {
+      brotliCacheSizeMb += (key.length + val.response.length) / 1024 / 1024;
+    }
+  }
+  function getOldestServed() {
+    let when = Infinity, keyToPrune;
+    for (let [key, val] of Object.entries(brotliCache)) {
+      if (val.lastServed < when) {
+        when = val.lastServed;
+        keyToPrune = key;
+      }
+    }
+    return keyToPrune;
+  }
+  while (brotliCacheSizeMb > settings.brotliCacheMaxSizeMb) {
+    let keyToPrune = getOldestServed();
+    delete brotliCache[keyToPrune];
+    let oldSize = brotliCacheSizeMb;
+    getCacheSize();
+  }
+}
 
 // args -> certificateName, routes
 function createHttpsServerProxy(...args) {
@@ -46,19 +84,41 @@ function createHttpsServerProxy(...args) {
   // Necessary with Node >= 15 to get spdy to work
   // (does not seem to work with default chunking from the proxy,
   //  but works if we send the whole response at once...)
-  // - this is a BIG workaround don't know 
-  //   how it will play with large files(videos etc)
+  // - this is a BIG workaround but also allows us to brotli compress
+  //   so all in all probably good
   proxy.on('proxyRes', function (proxyRes, req, res) {
     var body = [];
     proxyRes.on('data', function (chunk) {
       body.push(chunk);
     });
     proxyRes.on('end', function () {
-      for (let [header, value] of Object.entries(proxyRes.headers)) {
+      let h = { ...proxyRes.headers };
+      let response = Buffer.concat(body);
+      let ae = req.headers['Accept-Encoding'] || req.headers['accept-encoding'];
+      let ct = h['Content-Type'] || h['content-type'];
+      let en = h['Content-Encoding'] || h['content-encoding'];
+      if (req.method === 'GET' && !en && ae.includes('br') && ct && settings.brotliCompress(ct)) {
+        let responseAsText = response.toString();
+        if (brotliCache[responseAsText]) {
+          // in cache
+          response = brotliCache[responseAsText].response;
+          brotliCache[responseAsText].lastServed = Date.now();
+        }
+        else {
+          response = brotli.compress(response, { quality: settings.brotliQuality });
+          brotliCache[responseAsText] = { lastServed: Date.now(), response };
+          brotliCacheSizeMb += (responseAsText.length + response.length) / 1024 / 1024;
+          if (brotliCacheSizeMb > settings.brotliCacheMaxSizeMb) { pruneBrotliCache(); }
+        }
+        h['Content-Length'] && (h['Content-Length'] = response.length);
+        h['content-length'] && (h['content-length'] = response.length);
+        h['content-encoding'] = 'br';
+      }
+      for (let [header, value] of Object.entries(h)) {
         res.setHeader(header, value);
       }
       res.statusCode = proxyRes.statusCode;
-      res.end(Buffer.concat(body));
+      res.end(response);
     });
   });
 
@@ -83,7 +143,7 @@ function createHttpsServerProxy(...args) {
       SNICallback: lookupCert,
       key: certs[defaultCertName].key,
       cert: certs[defaultCertName].cert,
-      spdy: { maxChunk: settings.maxChunk, maxStreams: settings.maxStreams }
+      spdy: { maxChunk: settings.http2MaxChunk, maxStreams: settings.http2MaxStreams }
     }, serveHttps).listen(settings.httpsPort);
 
     // Without this spdy cuts off some streams.

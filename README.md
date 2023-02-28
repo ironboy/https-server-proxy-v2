@@ -1,14 +1,15 @@
 # https-server-proxy
 
-This is reverse-proxy meant to run at 'the front' of live web server. It will:
+This is reverse-proxy meant to run at 'the front' of live web server. It:
 
-* encrypt/decrypt https using TLS-certs (by default from LetsEncrypt)
-* use version 2 of the http-protocol
-* proxy applications using http version 1.0/1.1 (such as Express applications) so that they are served as http version 2.
+* encrypts/decrypts https using TLS-certs (by default from LetsEncrypt)
+* uses version 2 of the http-protocol
+* proxies applications using http version 1.0/1.1 (such as Express applications) so that they are served using http version 2.
 * let you run one application per domain/sub-domain by pointing out the internal ports each domain should be proxied to
 * allow redirects from one domain (or subdomain) to another. (For example if you want to redirect traffic from www.domain.com to domain.com - or vice versa.)
 * enable you to use several certificates if necessary, 
 * support web sockets.
+* compresses content using the Brotli compression algorithm and caches compressed results to avoid having to run compression again (which would be slow) on identical requests/responses. Tip: Don't compress in your application - leave it to the proxy...
 
 ### Install
 
@@ -32,7 +33,7 @@ proxy('some.domain.org' /*cert name*/, {
 (If you need to use several certificates then add another cert-name as argument 3, the mapping for domains in this certificate as argument 4 etc.)
 
 ### Settings
-There are some settings you change by calling *proxy.settings()*, see the default values below):
+There are some settings you change by calling *proxy.settings()*, see the default values below) - change one or many as you want (all are listed below):
 
 ```js
 const proxy = require('https-reverse-proxy');
@@ -42,9 +43,15 @@ proxy.settings({
   httpsPort: 443,
   pathToCerts: '/etc/letsencrypt/live',
   xPoweredBy: 'Love',
-  // http2 specific
-  maxChunk: 8192,
-  maxStreams: 80
+  brotliCompress: ct => /* compresss if true, ct = content-type */
+    ct.includes('text') ||
+    ct.includes('javascript') ||
+    ct.includes('json') ||
+    ct.includes('svg'),
+  brotliQuality: 11, /* 1-11 */
+  brotliCacheMaxSizeMb: 50,
+  http2MaxChunk: 8192,
+  http2MaxStreams: 80
 });
 
 proxy(/* see previous example */);

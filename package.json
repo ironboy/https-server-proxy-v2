@@ -1,6 +1,6 @@
 {
   "name": "https-server-proxy",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "An https server proxy for node.js (supporting http2 and Express applications)",
   "main": "index.js",
   "repository": {
@@ -17,13 +17,15 @@
     "http2",
     "express",
     "reverse-proxy",
-    "https"
+    "https",
+    "brotli"
   ],
   "bugs": {
     "url": "https://github.com/ironboy//https-server-proxy/issues"
   },
   "homepage": "https://github.com/ironboy//https-server-proxy#readme",
   "dependencies": {
+    "brotli": "^1.3.3",
     "http-proxy": "^1.18.1",
     "spdy": "^4.0.2"
   }
