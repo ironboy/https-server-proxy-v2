@@ -5,10 +5,10 @@ This is reverse-proxy meant to run at 'the front' of live web server. It:
 * encrypts/decrypts https using TLS-certs (by default from LetsEncrypt)
 * uses version 2 of the http-protocol
 * proxies applications using http version 1.0/1.1 (such as Express applications) so that they are served using http version 2.
-* let you run one application per domain/sub-domain by pointing out the internal ports each domain should be proxied to
-* allow redirects from one domain (or subdomain) to another. (For example if you want to redirect traffic from www.domain.com to domain.com - or vice versa.)
-* enable you to use several certificates if necessary, 
-* support web sockets.
+* lets you run one application per domain/sub-domain by pointing out the internal ports each domain should be proxied to
+* allows redirects from one domain (or subdomain) to another. (For example if you want to redirect traffic from www.domain.com to domain.com - or vice versa.)
+* enables you to use several certificates if necessary, 
+* supports web sockets.
 * compresses content using the Brotli compression algorithm and caches compressed results to avoid having to run compression again (which would be slow) on identical requests/responses. Tip: Don't compress in your application - leave it to the proxy...
 
 ### Install
