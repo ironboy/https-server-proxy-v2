@@ -48,7 +48,10 @@ proxy.settings({
     ct.includes('javascript') ||
     ct.includes('json') ||
     ct.includes('svg'),
-  brotliQuality: 11, /* 1-11 */
+  /* 1-11, initial fast response when doing brotli */
+  brotliFastQuality: 1,
+  /* 1-11, recompress better when we have time left */
+  brotliRecompressQuality: 11,
   brotliCacheMaxSizeMb: 50,
   http2MaxChunk: 8192,
   http2MaxStreams: 80
