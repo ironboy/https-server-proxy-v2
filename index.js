@@ -11,7 +11,9 @@ monkeyPatchDeciever();
 // Non native dependencies
 const httpProxy = require('http-proxy');
 const spdy = require('spdy');
-const brotli = require('brotli');
+
+// Our own module (with a dependency to npm brotli)
+const AsyncBrotli = require(path.join(__dirname, '/AsyncBrotli.js'));
 
 let settings = {
   httpPort: 80,
@@ -23,7 +25,10 @@ let settings = {
     ct.includes('javascript') ||
     ct.includes('json') ||
     ct.includes('svg'),
-  brotliQuality: 11, /* 1-11 */
+  /* 1-11, initial fast response when doing brotli */
+  brotliFastQuality: 1,
+  /* 1-11, recompress better when we have time left */
+  brotliRecompressQuality: 11,
   brotliCacheMaxSizeMb: 50,
   http2MaxChunk: 8192,
   http2MaxStreams: 80
@@ -67,6 +72,9 @@ function oneWayKey(key) {
 // args -> certificateName, routes
 function createHttpsServerProxy(...args) {
 
+  const brotliFastCompress = new AsyncBrotli({ quality: settings.brotliFastQuality });
+  const brotliRecompress = new AsyncBrotli({ quality: settings.brotliRecompressQuality });
+
   let routes = {}, currentCertName, certNameByDomain = {};
 
   // map certs to domains
@@ -97,7 +105,7 @@ function createHttpsServerProxy(...args) {
     proxyRes.on('data', function (chunk) {
       body.push(chunk);
     });
-    proxyRes.on('end', function () {
+    proxyRes.on('end', async function () {
       let h = { ...proxyRes.headers };
       let response = Buffer.concat(body);
       let ae = req.headers['Accept-Encoding'] || req.headers['accept-encoding'];
@@ -113,10 +121,11 @@ function createHttpsServerProxy(...args) {
         }
         else {
           let beforeCompress = response;
-          response = brotli.compress(response, { quality: settings.brotliQuality });
+          response = await brotliFastCompress.compress(response);
           if (!response) {
             // sometimes we get null from brotli.compress.
-            // WHY ? FIX FOR NOW
+            // (this happens when there is not enough data to compress...)
+            // so then go back to uncompressed version
             response = beforeCompress;
           }
           else {
@@ -124,6 +133,10 @@ function createHttpsServerProxy(...args) {
             brotliCacheSizeMb += (cacheKey.length + response.length) / 1024 / 1024;
             if (brotliCacheSizeMb > settings.brotliCacheMaxSizeMb) { pruneBrotliCache(); }
             h['content-encoding'] = 'br';
+            // recompress at a better brotli quality when we have the time
+            brotliRecompress.compress(beforeCompress).then(x =>
+              brotliCache[cacheKey] && (brotliCache[cacheKey].response = x)
+            );
           }
         }
         h['Content-Length'] && (h['Content-Length'] = response.length);
