@@ -111,14 +111,22 @@ function createHttpsServerProxy(...args) {
           brotliCache[cacheKey].lastServed = Date.now();
         }
         else {
+          let beforeCompress = response;
           response = brotli.compress(response, { quality: settings.brotliQuality });
-          brotliCache[cacheKey] = { lastServed: Date.now(), response };
-          brotliCacheSizeMb += (cacheKey.length + response.length) / 1024 / 1024;
-          if (brotliCacheSizeMb > settings.brotliCacheMaxSizeMb) { pruneBrotliCache(); }
+          if (!response) {
+            // sometimes we get null from brotli.compress.
+            // WHY ? FIX FOR NOW
+            response = beforeCompress;
+          }
+          else {
+            brotliCache[cacheKey] = { lastServed: Date.now(), response };
+            brotliCacheSizeMb += (cacheKey.length + response.length) / 1024 / 1024;
+            if (brotliCacheSizeMb > settings.brotliCacheMaxSizeMb) { pruneBrotliCache(); }
+            h['content-encoding'] = 'br';
+          }
         }
         h['Content-Length'] && (h['Content-Length'] = response.length);
         h['content-length'] && (h['content-length'] = response.length);
-        h['content-encoding'] = 'br';
       }
       for (let [header, value] of Object.entries(h)) {
         res.setHeader(header, value);
