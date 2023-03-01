@@ -1,6 +1,6 @@
 {
   "name": "https-server-proxy",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "An https server proxy for node.js (supporting http2 and Express applications)",
   "main": "index.js",
   "repository": {

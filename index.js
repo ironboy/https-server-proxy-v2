@@ -109,6 +109,7 @@ function createHttpsServerProxy(...args) {
           // in cache
           response = brotliCache[cacheKey].response;
           brotliCache[cacheKey].lastServed = Date.now();
+          h['content-encoding'] = 'br';
         }
         else {
           let beforeCompress = response;
