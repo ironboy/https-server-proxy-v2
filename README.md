@@ -47,7 +47,7 @@ proxy.settings({
   httpsPort: 443,
   pathToCerts: '/etc/letsencrypt/live',
   xPoweredBy: 'Love',
-   http2MaxChunk: 8192,
+  http2MaxChunk: 8192,
   http2MaxStreams: 80,
   brotliCacheMaxSizeMb: 50,
   /* 1-11, initial fast response when doing brotli */
