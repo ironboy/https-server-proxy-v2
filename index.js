@@ -66,9 +66,8 @@ function pruneBrotliCache() {
 }
 
 function oneWayKey(key) {
-  return crypto.createHmac('sha256', 'abc').update(key).digest('hex');
+  return crypto.createHash('sha256').update(key).digest('hex');
 }
-
 
 // args -> certificateName, routes
 function createHttpsServerProxy(...args) {
