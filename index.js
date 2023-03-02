@@ -109,9 +109,9 @@ function createHttpsServerProxy(...args) {
       let h = { ...proxyRes.headers };
       let response = Buffer.concat(body);
       let ae = req.headers['Accept-Encoding'] || req.headers['accept-encoding'];
-      let ct = h['Content-Type'] || h['content-type'];
+      let ct = h['Content-Type'] || h['content-type'] || '';
       let en = h['Content-Encoding'] || h['content-encoding'];
-      if (req.method === 'GET' && !en && ae.includes('br') && ct && settings.brotliCompress(ct)) {
+      if (req.method === 'GET' && !en && ae.includes('br') && ct && settings.brotliCompress(ct.toLowerCase())) {
         let cacheKey = oneWayKey(response.toString());
         if (brotliCache[cacheKey]) {
           // in cache
