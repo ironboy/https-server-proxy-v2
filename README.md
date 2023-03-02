@@ -30,6 +30,15 @@ proxy('some.domain.org' /*cert name*/, {
 });
 ```
 
+#### As an ES module
+If you want to use *https-reverse-proxy* as an ES-module (and thus have "type":"module" in your package.json file) simply replace the require statement with:
+
+```js
+import proxy from 'https-server-proxy/es.mjs';
+```
+
+---
+
 (If you need to use several certificates then add another cert-name as argument 3, the mapping for domains in this certificate as argument 4 etc.)
 
 **Note:** The **cert name** is the name of a subfolder in the folder *pathToCerts* (default: */etc/letsencrypt/live*). Each cert folder must contain the two files *privkey.pem* and *fullchain.pem*. This is the standard for LetsEncrypt certificates obtained using **certbot**. (If you have obtained a certificate with different file names for the *pem*-files, then rename them.)
