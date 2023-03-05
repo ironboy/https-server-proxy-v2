@@ -7,7 +7,7 @@ module.exports = class AsyncBrotli {
 
   constructor(options) {
     this.options = options;
-    this.worker = new Worker(path.join(__dirname, 'brotliWorker.js'));
+    this.worker = new Worker(path.join(__dirname, 'utils', 'brotliWorker.js'));
     this.worker.on("message", ({ id, compressed }) => {
       this.processQueue[id](compressed);
       delete this.processQueue[id];

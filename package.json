@@ -26,7 +26,6 @@
   "homepage": "https://github.com/ironboy//https-server-proxy#readme",
   "dependencies": {
     "brotli": "^1.3.3",
-    "http-proxy": "^1.18.1",
-    "spdy": "^4.0.2"
+    "selfsigned": "^2.1.1"
   }
 }
