@@ -6,8 +6,9 @@ const selfsigned = require('selfsigned');
 module.exports = class SelfSignedLocal {
 
   constructor() {
-    const filePath1 = path.join(__dirname, '../', 'bin', 'cert.pem');
-    const filePath2 = path.join(__dirname, '../', 'bin', 'privkey.pem');
+    const folder = [__dirname, '../', '.bin', 'localhost-self-signed'];
+    const filePath1 = path.join(...folder, 'cert.pem');
+    const filePath2 = path.join(...folder, 'privkey.pem');
     const daysOld = !fs.existsSync(filePath1) ? Infinity : (Date.now() - new Date(fs.statSync(filePath1).mtime).getTime()) / 1000 / 60 / 60 / 24;
     if (daysOld > 300) {
       // make new cert
