@@ -6,6 +6,7 @@ module.exports = class ProxyServer {
   async web(stream, headers, target) {
     const requestBody = await this.readRequestBody(stream);
     let url = headers[':path'];
+    console.log('url', url);
     const requestHeaders = this.getHeaders({ headers });
     if (await this.handle304(stream, headers, requestHeaders, target)) {
       return;
@@ -54,7 +55,6 @@ module.exports = class ProxyServer {
     (okTo304 || okTo304 === null) && reqH['if-modified-since']
       && (okTo304 = reqH['if-modified-since'] === resH['last-modified']);
     okTo304 && this.makeResponse(stream, null, resH, 304);
-    console.log("okTo304", okTo304);
     return okTo304;
   }
 
