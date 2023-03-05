@@ -4,10 +4,11 @@ const DoBrotli = require('./DoBrotli')
 module.exports = class ProxyServer {
 
   async web(stream, headers, target) {
-    const requestBody = await this.readRequestBody(stream);
     let url = headers[':path'];
-    console.log('url', url);
     const requestHeaders = this.getHeaders({ headers });
+    const requestBody = await this.getRequestBody(stream);
+    requestHeaders['content-length'] = (requestBody || '').length + '';
+    requestHeaders['content-length'] === '0' && delete requestHeaders['content-length'];
     if (await this.handle304(stream, headers, requestHeaders, target)) {
       return;
     }
@@ -34,7 +35,7 @@ module.exports = class ProxyServer {
   }
 
   // call async
-  readRequestBody(stream) {
+  getRequestBody(stream) {
     return new Promise(res => {
       const all = [];
       stream.on('readable', async (a = stream.read()) => a && all.push(a));
