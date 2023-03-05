@@ -64,3 +64,8 @@ images/*
 
 # npm ignore tests
 tests/*
+
+# .bin
+cert.pem
+privkey.pem
+*.br

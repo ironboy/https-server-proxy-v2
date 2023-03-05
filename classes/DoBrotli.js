@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 module.exports = class DoBrotli {
 
   constructor(stream, response, responseHeaders, status) {

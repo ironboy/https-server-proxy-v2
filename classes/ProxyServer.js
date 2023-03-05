@@ -21,6 +21,7 @@ module.exports = class ProxyServer {
     responseHeaders['x-powered-by'] = 'Love';
     !responseHeaders['content-security-policy']
       && (responseHeaders['content-security-policy'] = 'upgrade-insecure-requests;');
+    responseHeaders['access-control-allow-origin'] = '*';
     this.makeResponse(stream, response, responseHeaders);
   }
 
