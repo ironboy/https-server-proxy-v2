@@ -29,7 +29,6 @@ module.exports = class CreateFrontServers {
     let server = this.httpsServer = http2.createSecureServer({
       key,
       cert,
-      allowHTTP1: true,
       maxSessionMemory: 100 /* Chrome is hungry om MP4:s */
     });
     server.on('stream', (stream, headers) => {
