@@ -63,7 +63,7 @@ module.exports = class ProxyServer {
   getRequestBody(stream) {
     return new Promise(res => {
       const all = [];
-      stream.on('readable', async (a = stream.read()) => a && all.push(a));
+      stream.on('readable', (a = stream.read()) => a && all.push(a));
       stream.on('end', () => res(all.length ? Buffer.concat(all) : undefined));
     });
   }
@@ -71,7 +71,7 @@ module.exports = class ProxyServer {
   async makeResponse(stream, response, reqH, resH, method, status = response.status) {
     if (stream.closed) { return; }
     if (method === 'GET' && +status === 200 &&
-      (new DoBrotli(stream, response, reqH, resH, status)).willBrotli) {
+      (await (new DoBrotli(stream, response, reqH, resH, status)).willBrotli)) {
       return;
     }
     stream.respond({ ':status': status, ...resH });
