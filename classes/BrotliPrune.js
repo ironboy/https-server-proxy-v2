@@ -4,7 +4,7 @@ const path = require('path');
 
 class BrotliPrune {
 
-  maxSize = '20KB';
+  maxSize = '500MB';
   dir = path.join(__dirname, '../', '.bin', 'brotli-cache');
 
   sleep = ms => new Promise(res => setTimeout(res, ms));

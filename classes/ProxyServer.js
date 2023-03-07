@@ -42,13 +42,21 @@ module.exports = class ProxyServer {
 
   async makeResponse(stream, response, reqH, resH, method, status = response.status) {
     if (stream.closed) { return; }
-    if (method === 'GET' && +status === 200 &&
-      (await (new DoBrotli(stream, response, reqH, resH, status)).willBrotli)) {
-      return;
+    let doBrotli;
+    if (method === 'GET' && +status === 200) {
+      doBrotli = new DoBrotli(stream, response, reqH, resH, status);
+      if (await doBrotli.willBrotli) { return; }
     }
     stream.respond({ ':status': status, ...resH });
     const bodyStream = response?.body;
+    // probably 304 -> no response body
     if (!bodyStream) { stream.end(); }
+    // tried to brotli but compression failed
+    else if (doBrotli && !(await doBrotli.willBrotli) && doBrotli.uncompressed) {
+      stream.write(doBrotli.uncompressed);
+      stream.end();
+    }
+    // pipe stream through (excellent for big files like mp4 videos etc)
     else {
       // there will be a lot of errors when streams abort
       // (for example when 'scrubbing' through an mp4) - catch and ignore

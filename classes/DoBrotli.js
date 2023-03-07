@@ -38,6 +38,7 @@ module.exports = class DoBrotli {
     }
     all = Buffer.concat(all);
     const compressed = await this.getBrotlied(all);
+    this.uncompressed = all;
     this.promiseResolve(!!compressed);
     if (!compressed) { return; }
     this.resH['content-length'] = compressed.length;
