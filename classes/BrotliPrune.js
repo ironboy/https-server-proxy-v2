@@ -1,40 +1,30 @@
-const { time } = require('console');
-const fs = require('fs/promises');
 const path = require('path');
+const { Worker } = require("worker_threads");
 
-class BrotliPrune {
+module.exports = class BrotliPrune {
 
   maxSize = '500MB';
   dir = path.join(__dirname, '../', '.bin', 'brotli-cache');
 
-  sleep = ms => new Promise(res => setTimeout(res, ms));
+  processQueue = {};
 
   constructor() {
-    this.prune();
+    this.worker = new Worker(path.join(__dirname, '../', 'utils', 'brotliPrunerWorker.js'));
+    this.worker.on("message", ({ id, timeTaken, removedFiles }) => {
+      this.processQueue[id]({ timeTaken, removedFiles });
+      delete this.processQueue[id];
+    });
   }
 
-  async prune() {
-    while (true) {
-      const maxSizeBytes = this.sizeInBytes(this.maxSize);
-      const startTime = Date.now();
-      let files = (await fs.readdir(this.dir))
-        .filter(x => x.slice(-3) === '.br');
-      let stats = await Promise.all(files.map(x => fs.stat(path.join(this.dir, x))));
-      let joined = files.map((x, i) => [x, stats[i].mtime,
-        Math.ceil(stats[i].size / stats[i].blksize) * stats[i].blksize]);
-      joined.sort((a, b) => a[1] > b[1] ? -1 : 1)
-      let totalSize = joined.reduce((a, c) => a + c[2], 0);
-      let removed = [];
-      while (totalSize > maxSizeBytes) {
-        let toRemove = joined.pop();
-        removed.push(fs.rm(path.join(this.dir, toRemove[0])).catch(e => 0));
-        totalSize -= toRemove[2];
-      }
-      await Promise.all(removed);
-      const timeTaken = Date.now() - startTime;
-      // console.log('Prune, time taken (ms)', timeTaken);
-      await this.sleep(10000);
-    }
+  // call async!
+  prune() {
+    let dir = this.dir;
+    let maxSizeBytes = this.sizeInBytes(this.maxSize);
+    let id = Math.random();
+    return new Promise(resolve => {
+      this.processQueue[id] = resolve;
+      this.worker.postMessage({ id, maxSizeBytes, dir });
+    });
   }
 
   sizeInBytes(size) {
@@ -44,5 +34,3 @@ class BrotliPrune {
   }
 
 }
-
-new BrotliPrune();

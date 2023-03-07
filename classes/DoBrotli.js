@@ -2,7 +2,9 @@ const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
 const AsyncBrotli = require('./AsyncBrotli');
+const BrotliPrune = require('./BrotliPrune');
 const touch = require('../utils/touch');
+const pruner = new BrotliPrune();
 
 module.exports = class DoBrotli {
 
@@ -56,7 +58,10 @@ module.exports = class DoBrotli {
     let data = await DoBrotli.fastCompress.compress(all);
     data && wf(hash + '.fast.br', data);
     data && DoBrotli.recompress.compress(all)
-      .then(x => wf(hash + '.br', x).then(() => rm(hash + '.fast.br')));
+      .then(x => wf(hash + '.br', x))
+      .then(() => rm(hash + '.fast.br'))
+      .then(() => pruner.prune())
+    // .then(x => console.log(x))
     return data;
   }
 
