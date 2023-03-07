@@ -1,4 +1,5 @@
 module.exports = class ProxyHelpers {
+
   static getHeaders(obj, requestBody) {
     const h = Object.fromEntries(
       (obj.headers.entries ?

@@ -29,7 +29,7 @@ module.exports = class CreateFrontServers {
     let server = this.httpsServer = http2.createSecureServer({
       key,
       cert,
-      maxSessionMemory: 100 /* Chrome is hungry om MP4:s */
+      maxSessionMemory: 100 /* Chrome is hungry om mp4:s */
     });
     server.on('stream', (stream, headers) => {
       this.proxyServer.web(stream, headers, 'http://127.0.0.1:4000');
