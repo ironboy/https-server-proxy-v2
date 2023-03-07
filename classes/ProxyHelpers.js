@@ -6,7 +6,7 @@ module.exports = class ProxyHelpers {
         [...obj.headers.entries()] : Object.entries(obj.headers))
         .map(e => [e[0].toLowerCase(), e[1]])
         .filter(e => e[0][0] !== ':')
-        .filter(e => !['connection', 'keep-alive'].includes(e[0])));
+        .filter(e => !['connection', 'keep-alive', 'transfer-encoding', 'content-encoding'].includes(e[0])));
     if (!(obj instanceof Response)) {
       h['content-length'] = (requestBody || '').length + '';
       h['content-length'] === '0' && delete h['content-length'];

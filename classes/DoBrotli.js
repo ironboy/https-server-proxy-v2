@@ -17,7 +17,8 @@ module.exports = class DoBrotli {
       ct.includes('text') ||
       ct.includes('javascript') ||
       ct.includes('json') ||
-      ct.includes('svg')
+      ct.includes('svg') ||
+      ct.includes('font')
     );
 
   constructor(stream, response, reqH, resH, status) {
