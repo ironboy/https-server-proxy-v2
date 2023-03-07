@@ -32,7 +32,8 @@ module.exports = class CreateFrontServers {
       maxSessionMemory: 100 /* Chrome is hungry om mp4:s */
     });
     server.on('stream', (stream, headers) => {
-      this.proxyServer.web(stream, headers, 'http://127.0.0.1:4000');
+      //this.proxyServer.web(stream, headers, 'http://127.0.0.1:4000');
+      this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
     });
     server.listen(this.httpsPort);
   }

@@ -16,7 +16,7 @@ module.exports = class ProxyServer {
       method,
       headers: requestHeaders,
       body: requestBody
-    });
+    }).catch(e => this.errorResponse());
     const responseHeaders = this.getHeaders(response);
     this.makeResponse(stream, response, requestHeaders, responseHeaders, method);
   }
@@ -25,7 +25,7 @@ module.exports = class ProxyServer {
     if (headers[':method'] !== 'GET') { return; }
     const response = await fetch(target + headers[':path'], {
       method: 'HEAD', headers: reqH
-    });
+    }).catch(e => this.errorResponse());
     const resH = this.getHeaders(response);
     let okTo304 = null;
     reqH['if-none-match']
@@ -62,6 +62,12 @@ module.exports = class ProxyServer {
       // (for example when 'scrubbing' through an mp4) - catch and ignore
       await pipeline(bodyStream, stream).catch(e => false);
     }
+  }
+
+  errorResponse() {
+    var blob = new Blob(['Service Unavailable'], { type: 'text/plain' });
+    var init = { "status": 503, "statusText": "Service Unavailable" };
+    return new Response(blob, init);
   }
 
 }
