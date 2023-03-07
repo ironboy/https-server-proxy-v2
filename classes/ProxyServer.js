@@ -56,7 +56,7 @@ module.exports = class ProxyServer {
       stream.write(doBrotli.uncompressed);
       stream.end();
     }
-    // pipe stream through (excellent for big files like mp4 videos etc)
+    // pipe the response stream to the output stream (binaries / non-compressed)
     else {
       // there will be a lot of errors when streams abort
       // (for example when 'scrubbing' through an mp4) - catch and ignore
