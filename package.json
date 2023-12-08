@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/ironboy//https-server-proxy#readme",
   "dependencies": {
-    "selfsigned": "^2.1.1"
+    "selfsigned": "^2.1.1",
+    "ws": "^8.12.1"
   }
 }

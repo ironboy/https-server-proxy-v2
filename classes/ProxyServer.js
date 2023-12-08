@@ -5,6 +5,13 @@ const DoBrotli = require('./DoBrotli')
 module.exports = class ProxyServer {
 
   async web(stream, headers, target) {
+    if (headers[':method'] === 'CONNECT') {
+      stream.respond({
+        'sec-websocket-protocol': headers['sec-websocket-protocol']
+      });
+      console.log("SOCKET AHEAD")
+      return;
+    }
     Object.assign(this, { getHeaders, getRequestBody });
     let url = headers[':path'];
     const requestBody = await this.getRequestBody(stream);

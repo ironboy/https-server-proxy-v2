@@ -2,6 +2,7 @@ const http = require('http');
 const http2 = require('http2');
 const SelfSignedLocal = require('./SelfSignedLocal');
 const ProxyServer = require('./ProxyServer');
+let ws;
 
 module.exports = class CreateFrontServers {
 
@@ -29,23 +30,21 @@ module.exports = class CreateFrontServers {
     let server = this.httpsServer = http2.createSecureServer({
       key,
       cert,
-      allowHTTP1: true, /* needed for web sockets */
+      allowHTTP1: true, /* needed for web sockets if not http2 web sockets */
+      enableConnectProtocol: true, /* did not get to work ? */
       maxSessionMemory: 100 /* Chrome is hungry om mp4:s */
     });
     server.on('stream', (stream, headers) => {
-      https://java21h.lms.nodehill.se/
+      //https://java21h.lms.nodehill.se/
       //this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
-      this.proxyServer.web(stream, headers, 'https://www.aftonbladet.se');
-      //this.proxyServer.web(stream, headers, 'http://localhost:5173');
+      //this.proxyServer.web(stream, headers, 'https://www.aftonbladet.se');
+      this.proxyServer.web(stream, headers, 'http://localhost:5173');
       // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
     });
-    server.on('upgrade', (req, socket, head) => {
-      socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
-        'Upgrade: WebSocket\r\n' +
-        'Connection: Upgrade\r\n' +
-        '\r\n');
-      //socket.pipe(socket);
-      console.log("PIPED")
+    server.on('upgrade', async (req, socket, head) => {
+      ws = ws || await import('ws');
+      console.log(ws)
+      console.log("HERE WE GO");
     });
     server.listen(this.httpsPort);
   }
