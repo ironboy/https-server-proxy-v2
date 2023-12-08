@@ -12,7 +12,8 @@ module.exports = class ProxyServer {
     if (await this.handle304(stream, headers, requestHeaders, target)) {
       return;
     }
-    const method = headers[':method'], response = await fetch(target + url, {
+    const method = headers[':method'];
+    const response = await fetch(target + url, {
       method,
       headers: requestHeaders,
       body: requestBody
