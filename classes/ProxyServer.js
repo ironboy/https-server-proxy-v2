@@ -42,7 +42,7 @@ module.exports = class ProxyServer {
       delete resH['content-length'];
       delete resH['content-encoding'];
       this.makeResponse(stream, null, reqH, resH, 'GET', 304);
-      return true
+      return true;
     }
   }
 
