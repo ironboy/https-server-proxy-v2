@@ -5,7 +5,11 @@ const ProxyServer = require('./ProxyServer');
 
 module.exports = class CreateFrontServers {
 
-  constructor({ httpPort, httpsPort, cert = 'localhost' }) {
+  constructor({
+    httpPort = 80,
+    httpsPort = 443,
+    cert = 'localhost'
+  }) {
     cert === 'localhost' && (cert = new SelfSignedLocal());
     Object.assign(this, { httpPort, httpsPort, cert });
     this.proxyServer = new ProxyServer();
@@ -33,9 +37,9 @@ module.exports = class CreateFrontServers {
       maxSessionMemory: 100 /* Chrome is hungry om mp4:s */
     });
     server.on('stream', (stream, headers) => {
-      https://java21h.lms.nodehill.se/
+      // https://java21h.lms.nodehill.se/
       //this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
-      this.proxyServer.web(stream, headers, 'https://www.aftonbladet.se');
+      this.proxyServer.web(stream, headers, 'https://filmvisarna-team2.nodehill.se');
       //this.proxyServer.web(stream, headers, 'http://localhost:5173');
       // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
     });

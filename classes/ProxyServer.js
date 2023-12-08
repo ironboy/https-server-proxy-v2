@@ -22,7 +22,12 @@ module.exports = class ProxyServer {
   }
 
   async handle304(stream, headers, reqH, target) {
-    if (headers[':method'] !== 'GET') { return; }
+    if (
+      headers[':method'] !== 'GET' ||
+      (headers.accept || '').includes('event-stream')
+    ) {
+      return;
+    }
     const response = await fetch(target + headers[':path'], {
       method: 'HEAD', headers: reqH
     }).catch(this.errorResponse);
