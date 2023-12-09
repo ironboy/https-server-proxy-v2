@@ -7,6 +7,7 @@ module.exports = class ProxyServer {
   async web(stream, headers, target) {
     Object.assign(this, { getHeaders, getRequestBody });
     let url = headers[':path'];
+    this.startTime = Date.now();
     const requestBody = await this.getRequestBody(stream);
     const requestHeaders = this.getHeaders({ headers }, requestBody);
     if (await this.handle304(stream, headers, requestHeaders, target)) {
@@ -23,12 +24,12 @@ module.exports = class ProxyServer {
   }
 
   async handle304(stream, headers, reqH, target) {
-    if (
-      headers[':method'] !== 'GET' ||
-      (headers.accept || '').includes('event-stream')
-    ) {
-      return;
-    }
+    let try304 =
+      headers[':method'] === 'GET' && (
+        headers['if-modified-since'] ||
+        headers['if-none-match']
+      );
+    if (!try304) { return; }
     const response = await fetch(target + headers[':path'], {
       method: 'HEAD', headers: reqH
     }).catch(this.errorResponse);
@@ -50,8 +51,13 @@ module.exports = class ProxyServer {
     if (stream.closed) { return; }
     let doBrotli;
     if (method === 'GET' && +status === 200) {
-      doBrotli = new DoBrotli(stream, response, reqH, resH, status);
-      if (await doBrotli.willBrotli) { return; }
+      let timeTakenMs = Date.now() - this.startTime;
+      // don't try to brotli compress if time taken >= 20 sec
+      // because probably long polling, otherwise try
+      if (timeTakenMs < 20000) {
+        doBrotli = new DoBrotli(stream, response, reqH, resH, status);
+        if (await doBrotli.willBrotli) { return; }
+      }
     }
     stream.respond({ ':status': status, ...resH });
     const bodyStream = response?.body;

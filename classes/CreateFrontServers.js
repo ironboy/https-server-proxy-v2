@@ -33,24 +33,24 @@ module.exports = class CreateFrontServers {
     let server = this.httpsServer = http2.createSecureServer({
       key,
       cert,
-      allowHTTP1: true, /* needed for web sockets */
+      //allowHTTP1: true, /* needed for web sockets */
       maxSessionMemory: 100 /* Chrome is hungry om mp4:s */
     });
     server.on('stream', (stream, headers) => {
       // https://java21h.lms.nodehill.se/
       //this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
-      this.proxyServer.web(stream, headers, 'https://filmvisarna-team2.nodehill.se');
+      this.proxyServer.web(stream, headers, 'https://filmvisarna-team5.nodehill.se');
       //this.proxyServer.web(stream, headers, 'http://localhost:5173');
       // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
     });
-    server.on('upgrade', (req, socket, head) => {
+    /*server.on('upgrade', (req, socket, head) => {
       socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
         'Upgrade: WebSocket\r\n' +
         'Connection: Upgrade\r\n' +
         '\r\n');
-      //socket.pipe(socket);
+      socket.pipe(socket);
       console.log("PIPED")
-    });
+    });*/
     server.listen(this.httpsPort);
   }
 
