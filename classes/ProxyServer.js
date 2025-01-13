@@ -50,12 +50,6 @@ module.exports = class ProxyServer {
   async makeResponse(stream, response, reqH, resH, method, status = response.status) {
     if (stream.closed) { return; }
 
-    // Test of header modification
-    resH.server = 'HillEngine 1.1';
-    resH['x-powered-by'] = 'ironboy';
-    console.log(Object.keys(resH));
-    console.log(resH.server)
-
     let doBrotli;
     if (method === 'GET' && +status === 200) {
       let timeTakenMs = Date.now() - this.startTime;

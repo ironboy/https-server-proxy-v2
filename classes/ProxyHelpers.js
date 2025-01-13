@@ -13,7 +13,8 @@ module.exports = class ProxyHelpers {
     }
     else {
       Object.assign(h, {
-        'x-powered-by': 'Love',
+        server: 'HillEngine 1.2',
+        'x-powered-by': 'ironboy',
         'content-security-policy': 'upgrade-insecure-requests;',
         'access-control-allow-origin': '*'
       });
