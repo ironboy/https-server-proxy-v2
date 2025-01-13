@@ -37,7 +37,7 @@ module.exports = class CreateFrontServers {
     });
     server.on('stream', (stream, headers) => {
       // https://java21h.lms.nodehill.se/
-      //this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
+      // this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
       this.proxyServer.web(stream, headers, 'https://filmvisarna-team5.nodehill.se');
       //this.proxyServer.web(stream, headers, 'http://localhost:5173');
       // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');

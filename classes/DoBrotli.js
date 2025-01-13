@@ -61,8 +61,7 @@ module.exports = class DoBrotli {
     data && DoBrotli.recompress.compress(all)
       .then(x => wf(hash + '.br', x))
       .then(() => rm(hash + '.fast.br'))
-      .then(() => pruner.prune())
-    // .then(x => console.log(x))
+      .then(() => pruner.prune());
     return data;
   }
 
