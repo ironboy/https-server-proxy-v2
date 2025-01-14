@@ -3,6 +3,10 @@ const http2 = require('http2');
 const SelfSignedLocal = require('./SelfSignedLocal');
 const ProxyServer = require('./ProxyServer');
 
+// only used for web sockets
+// (all other proxy logic is our own)
+const proxy = require('http-proxy').createProxyServer();
+
 module.exports = class CreateFrontServers {
 
   constructor({
@@ -33,15 +37,23 @@ module.exports = class CreateFrontServers {
     let server = this.httpsServer = http2.createSecureServer({
       key,
       cert,
-      maxSessionMemory: 100 /* Chrome is hungry om mp4:s */
-    });
-    server.on('stream', (stream, headers) => {
-      // https://java21h.lms.nodehill.se/
-      // this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
-      this.proxyServer.web(stream, headers, 'https://filmvisarna-team5.nodehill.se');
-      //this.proxyServer.web(stream, headers, 'http://localhost:5173');
-      // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
-    });
+      maxSessionMemory: 100 /* Chrome is hungry om mp4:s */,
+      allowHTTP1: true // needed for web socket upgrade protocol requests
+    })
+      .on('stream', (stream, headers) => {
+        // https://java21h.lms.nodehill.se/
+        //this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
+        this.proxyServer.web(stream, headers, 'https://filmvisarna-team5.nodehill.se');
+        //this.proxyServer.web(stream, headers, 'http://localhost:5173');
+        // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
+      })
+      .on('upgrade', (request, socket, head) => {
+        // see https://github.com/nodejs/node/issues/31709 
+        // (upgrade undocumented for http2 module)
+        proxy.ws(request, socket, head, { changeOrigin: true, target: 'https://filmvisarna-team5.nodehill.se' }, e => {
+          console.log(e + '', '(non-fatal...)');
+        });
+      });
     server.listen(this.httpsPort);
   }
 
