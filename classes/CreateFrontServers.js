@@ -41,13 +41,15 @@ module.exports = class CreateFrontServers {
       allowHTTP1: true // needed for web socket upgrade protocol requests
     })
       .on('stream', (stream, headers) => {
-        // https://java21h.lms.nodehill.se/
-        //this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
-        this.proxyServer.web(stream, headers, 'https://filmvisarna-team5.nodehill.se');
+        // console.log(headers[':authority'] || headers.host); // how to read host
+
+        this.proxyServer.web(stream, headers, 'https://java21h.lms.nodehill.se');
+        //this.proxyServer.web(stream, headers, 'https://filmvisarna-team5.nodehill.se');
         //this.proxyServer.web(stream, headers, 'http://localhost:5173');
         // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
       })
       .on('upgrade', (request, socket, head) => {
+        // console.log(request.headers.host); // read host in http 1.1
         // see https://github.com/nodejs/node/issues/31709 
         // (upgrade undocumented for http2 module)
         proxy.ws(request, socket, head, { changeOrigin: true, target: 'https://filmvisarna-team5.nodehill.se' }, e => {
