@@ -2,7 +2,11 @@ const http = require('http');
 const http2 = require('http2');
 const SelfSignedLocal = require('./SelfSignedLocal');
 const ProxyServer = require('./ProxyServer');
+const fs = require('fs');
+const path = require('path');
 
+const siteToProxy = fs.readFileSync(path.join(__dirname, '..', 'site-to-proxy.txt'), 'utf-8');
+console.log('Proxying: ' + siteToProxy);
 // only used for web sockets
 // (all other proxy logic is our own)
 const proxy = require('http-proxy').createProxyServer();
@@ -43,7 +47,7 @@ module.exports = class CreateFrontServers {
       .on('stream', (stream, headers) => {
         // console.log(headers[':authority'] || headers.host); // how to read host
 
-        this.proxyServer.web(stream, headers, 'https://www.aftonbladet.se');
+        this.proxyServer.web(stream, headers, siteToProxy);
         //this.proxyServer.web(stream, headers, 'https://filmvisarna-team5.nodehill.se');
         //this.proxyServer.web(stream, headers, 'http://localhost:5173');
         // this.proxyServer.web(stream, headers, 'https://www.nodehill.com');
@@ -57,6 +61,7 @@ module.exports = class CreateFrontServers {
       });
     });*/
     server.listen(this.httpsPort);
+    console.log('Listetning on https://localhost:' + this.httpsPort);
   }
 
 }
