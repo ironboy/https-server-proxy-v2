@@ -1,6 +1,8 @@
 const { pipeline } = require('stream/promises');
 const { getHeaders, getRequestBody } = require('./ProxyHelpers');
 const DoBrotli = require('./DoBrotli')
+const fs = require('fs');
+const path = require('path');
 
 module.exports = class ProxyServer {
 
@@ -19,6 +21,7 @@ module.exports = class ProxyServer {
       headers: requestHeaders,
       body: requestBody
     }).catch(this.errorResponse);
+
     const responseHeaders = this.getHeaders(response);
     this.makeResponse(stream, response, requestHeaders, responseHeaders, method);
   }
@@ -55,11 +58,13 @@ module.exports = class ProxyServer {
       let timeTakenMs = Date.now() - this.startTime;
       // don't try to brotli compress if time taken >= 20 sec
       // because probably long polling, otherwise try
-      if (timeTakenMs < 20000) {
+      // TURN OFF BROTLI COMPLETELY
+      if (timeTakenMs < 20000 && false) {
         doBrotli = new DoBrotli(stream, response, reqH, resH, status);
         if (await doBrotli.willBrotli) { return; }
       }
     }
+
 
     stream.respond({ ':status': status, ...resH });
     const bodyStream = response?.body;
@@ -73,10 +78,26 @@ module.exports = class ProxyServer {
     // pipe the response stream to the output stream 
     // (for binaries / non - compressed)
     else {
+
+      // injecting a script
+      const reader = bodyStream.getReader();
+      let all = [];
+      while (reader) {
+        const { value, done } = await reader.read();
+        value && all.push(value);
+        if (done) { break; }
+      }
+      all = Buffer.concat(all).toString('utf-8');
+      if (all.includes('</body>')) {
+        let inject = fs.readFileSync(path.join(__dirname, '..', 'to-inject.js'), 'utf-8');
+        all = all.replace('</body>', `<script>${inject}</script>\n</body>`);
+      }
+
+
       // there will be a lot of errors when streams abort
       // (for example when 'scrubbing' through an mp4) 
       // - catch and ignore these
-      await pipeline(bodyStream, stream).catch(e => false);
+      await pipeline(all, stream).catch(e => false);
     }
   }
 
