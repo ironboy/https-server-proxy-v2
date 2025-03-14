@@ -61,7 +61,7 @@ module.exports = class CreateFrontServers {
       });
     });*/
     server.listen(this.httpsPort);
-    console.log('Listetning on https://localhost:' + this.httpsPort);
+    console.log('Listening on https://localhost:' + this.httpsPort);
   }
 
 }
